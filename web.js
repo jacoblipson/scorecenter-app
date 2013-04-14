@@ -12,9 +12,7 @@ app.all('/', function(req, res, next) {
  });
 
 // Mongo initialization
-var mongoUri = process.env.MONGOLAB_URI || 
-  process.env.MONGOHQ_URL || 
-  'mongodb://<jlipson>:<fish>@dharma.mongohq.com:10022/scorecenter';
+var mongoUri = 'mongodb://jlipson:fish@dharma.mongohq.com:10022/scorecenter';
 var mongo = require('mongodb');
 var db = mongo.Db.connect(mongoUri, function (error, databaseConnection) {
 	db = databaseConnection;
@@ -28,8 +26,8 @@ app.post('/submit.json', function (request, response) {
 
 app.get('/', function (request, response) {
 	
-		db.scores('scores', function(er, collection) {
-			scores.find()...
+		//db.scores('scores', function(er, collection) {
+			//scores.find()...
 	
 	response.set('Content-Type', 'text/html');
 	response.send('<p>Hi!</p>');
@@ -41,9 +39,14 @@ app.get('/highscores.json', function(request, response) {
 	response.send('{"status":"good"}');
 });
 
-app.get('/fool', function(request, response) {
+app.get('/username', function(request, response) {
 	response.set('Content-Type', 'text/html');
 	response.send(500, 'Something broke!');
+	
+	//var username = $("#input").val()
+    //$.post("/usersearch", {username: username}, function(res) {
+    //   console.log(res)
+    //})
 });
 
 // Oh joy! http://stackoverflow.com/questions/15693192/heroku-node-js-error-web-process-failed-to-bind-to-port-within-60-seconds-of
