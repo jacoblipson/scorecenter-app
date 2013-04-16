@@ -21,9 +21,10 @@ var db = mongo.Db.connect(mongoUri, function (error, databaseConnection) {
 });
 
 app.post('/submit.json', function (request, response) {
-	if (request.game_title != null && request.username != null && request.score != null) {
+	if (request.game_title && request.username && request.score) {
 		var now = new Date;
-		input = {game_title:request.game_title, username:request.username, score:request.score, dateplayed: now};
+		input = {"game_title":request.game_title, "username":request.username, "score":request.score, "created_at": now};
+		console.log(input);
 		db.collection('scores', function (err, scores) {
 			console.log(err);
 			scores.insert(input);
@@ -42,12 +43,12 @@ app.get('/', function (request, response) {
 			cursor.each(function (err, item) {
 				console.log(err);
 				if (item != null) {
-					content = content + '<tr><td>' + item.game_title + '</td><td>' + item.username + '</td><td>' + item.score + '</td><td>' + item.dateplayed + '</td></tr>';
+					content = content + '<tr><td>' + item.game_title + '</td><td>' + item.username + '</td><td>' + item.score + '</td><td>' + item.created_at + '</td></tr>';
 				}
 				else {
 					db.close();
 					response.set('Content-Type', 'text/html');
-					response.send('<html><head><title>High Scores</title></head><body><h1>High Scores</h1><a href="/usersearch">Find scores for a specific user</a><p>Find scores for a specific game: </p><form name="input" action="highscores.json" method="get">Game Title: <input type="text" name="game_title"><input type="submit" value="Submit"></form><p><h2>All Scores</h2><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Date Played</td></tr>' + content + '</table></p></body></html>');
+					response.send('<html><head><title>High Scores</title></head><body><h1>High Scores</h1><a href="/usersearch">Find scores for a specific user</a><p>Find scores for a specific game: </p><form name="input" action="highscores.json" method="get">Game Title: <input type="text" name="game_title"><input type="submit" value="Submit"></form><p><h2>All Scores</h2><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Created At</td></tr>' + content + '</table></p></body></html>');
 				}
 			});
 		});
@@ -57,8 +58,6 @@ app.get('/', function (request, response) {
 
 app.get('/highscores.json', function(request, response) {
 	var game = request.query;
-	console.log('game: ');
-	console.log(game);
 	var content = '';
 	db.collection('scores', function (err, scores) {
 		scores.find(game).sort( {score: -1} ).limit( 10, function (err, cursor) {
@@ -70,8 +69,8 @@ app.get('/highscores.json', function(request, response) {
 				}
 				else {
 					db.close();
-					response.set('Content-Type', 'text/html');
-					response.send('<html><head><title>Top 10 Scores</title></head><body><h1>Top 10 Scores</h1><p>' + content + '</p><a href="/">Back to all scores</a></body></html>');
+					response.set('Content-Type', 'text/json');
+					response.send(content);
 				}
 			});
 		});
@@ -92,12 +91,12 @@ app.post('/showuserscores', function(request, response) {
 			cursor.each(function (err, item) {
 				console.log(err);
 				if (item != null) {
-					content = content + '<tr><td>' + item.game_title + '</td><td>' + item.username + '</td><td>' + item.score + '</td><td>' + item.dateplayed + '</td></tr>';
+					content = content + '<tr><td>' + item.game_title + '</td><td>' + item.username + '</td><td>' + item.score + '</td><td>' + item.created_at + '</td></tr>';
 				}
 				else {
 					db.close();
 					response.set('Content-Type', 'text/html');
-					response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><h2>Displaying scores for:' + user + '</h2><p><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Date Played</td></tr>' + content + '</table></p><a href="/usersearch">Back to user search</a></body></html>');
+					response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><h2>Displaying scores for:' + user + '</h2><p><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Created At</td></tr>' + content + '</table></p><a href="/usersearch">Back to user search</a></body></html>');
 				}
 			});
 		});
