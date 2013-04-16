@@ -12,42 +12,91 @@ app.all('/', function(req, res, next) {
  });
 
 // Mongo initialization
-var mongoUri = 'mongodb://jlipson:fish@dharma.mongohq.com:10022/scorecenter';
+var mongoUri = process.env.MONGOLAB_URI || 
+  process.env.MONGOHQ_URL || 'mongodb://localhost:27017/scorecenter';
 var mongo = require('mongodb');
 var db = mongo.Db.connect(mongoUri, function (error, databaseConnection) {
+	console.log(error);
 	db = databaseConnection;
 });
 
 app.post('/submit.json', function (request, response) {
-	response.set();
-	response.send();
+	db.collection('scores', function (err, scores) {
+		scores.insert();
+		console.log(inserting);
+	});
 });
 
 
 app.get('/', function (request, response) {
-	
-		//db.scores('scores', function(er, collection) {
-			//scores.find()...
-	
-	response.set('Content-Type', 'text/html');
-	response.send('<p>Hi!</p>');
+	db.collection('scores', function (err, scores) {
+		var today = new Date;
+		scores.insert({ game_title: "Snake", username: "Jake", score: 900, dateplayed: today });
+		scores.find(function(err, cursor) {
+			console.log(err);
+			var content = '';
+			cursor.each(function (err, item) {
+				console.log(err);
+				if (item != null) {
+					content = content + '<tr><td>' + item.game_title + '</td><td>' + item.username + '</td><td>' + item.score + '</td><td>' + item.dateplayed + '</td></tr>';
+				}
+				else {
+					db.close();
+					response.set('Content-Type', 'text/html');
+					response.send('<html><head><title>High Scores</title></head><body><h1>High Scores</h1><a href="/usersearch">Find scores for a specific user</a><p>Find scores for a specific game: </p><form name="input" action="highscores.json" method="get">Game Title: <input type="text" name="game_title"><input type="submit" value="Submit"></form><p><h2>All Scores</h2><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Date Played</td></tr>' + content + '</table></p></body></html>');
+				}
+			});
+		});
+	});
 });
 
 
 app.get('/highscores.json', function(request, response) {
-	response.set('Content-Type', 'text/json');
-	response.send('{"status":"good"}');
+	var game = request.query;
+	var content = '';
+	db.collection('scores', function (err, scores) {
+		scores.find(game).sort( {score: -1} ).limit( 10, function (err, cursor) {
+			console.log(err);
+			cursor.each(function (err, item) {
+				console.log(err);
+				if (item != null) {
+					content = content + JSON.stringify(item);
+				}
+				else {
+					db.close();
+					response.set('Content-Type', 'text/html');
+					response.send('<html><head><title>Top 10 Scores</title></head><body><h1>Top 10 Scores</h1><p>' + content + '</p><a href="/">Back to all scores</a></body></html>');
+				}
+			});
+		});
+	});
 });
 
-app.get('/username', function(request, response) {
+app.get('/usersearch', function(request, response) {
 	response.set('Content-Type', 'text/html');
-	response.send(500, 'Something broke!');
-	
-	//var username = $("#input").val()
-    //$.post("/usersearch", {username: username}, function(res) {
-    //   console.log(res)
-    //})
+	response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><p>Find scores for a specific user: </p><form name="input" action="showuserscores" method="post">Username: <input type="text" name="title"><input type="submit" value="Submit"></form><a href="/">Back to all scores</a></body></html>');
+});
+
+app.post('/showuserscores', function(request, response) {
+	var username = request.query;
+	db.collection('scores', function(error, scores) {
+		scores.find(username, function (error, cursor) {
+			console.log(error);
+			var content = '';
+			cursor.each(function (err, item) {
+				console.log(err);
+				if (item != null) {
+					content = content + '<tr><td>' + item.game_title + '</td><td>' + item.username + '</td><td>' + item.score + '</td><td>' + item.dateplayed + '</td></tr>';
+				}
+				else {
+					db.close();
+					response.set('Content-Type', 'text/html');
+					response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><h2>Displaying scores for:' + username + '</h2><p><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Date Played</td></tr>' + content + '</table></p><a href="/">Back to user search</a></body></html>');
+				}
+			});
+		});
+	});
 });
 
 // Oh joy! http://stackoverflow.com/questions/15693192/heroku-node-js-error-web-process-failed-to-bind-to-port-within-60-seconds-of
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT || 8000);
