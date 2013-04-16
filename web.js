@@ -21,10 +21,15 @@ var db = mongo.Db.connect(mongoUri, function (error, databaseConnection) {
 });
 
 app.post('/submit.json', function (request, response) {
-	db.collection('scores', function (err, scores) {
-		scores.insert();
-		console.log(inserting);
-	});
+	if (request.game_title != null && request.username != null && request.score != null) {
+		var now = new Date;
+		input = {game_title:request.game_title, username:request.username, score:request.score, dateplayed: now};
+		db.collection('scores', function (err, scores) {
+			console.log(err);
+			scores.insert(input);
+			console.log(inserting);
+		});
+	}
 });
 
 
