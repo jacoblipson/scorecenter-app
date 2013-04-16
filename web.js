@@ -36,7 +36,6 @@ app.post('/submit.json', function (request, response) {
 
 app.get('/', function (request, response) {
 	db.collection('scores', function (err, scores) {
-		var today = new Date;
 		scores.find().sort({game_title:1}, function(err, cursor) {
 			console.log(err);
 			var content = '';
@@ -96,7 +95,7 @@ app.post('/showuserscores', function(request, response) {
 				else {
 					db.close();
 					response.set('Content-Type', 'text/html');
-					response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><h2>Displaying scores for:' + user + '</h2><p><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Created At</td></tr>' + content + '</table></p><a href="/usersearch">Back to user search</a></body></html>');
+					response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><h2>Displaying scores for: ' + user + '</h2><p><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Created At</td></tr>' + content + '</table></p><a href="/usersearch">Back to user search</a></body></html>');
 				}
 			});
 		});
