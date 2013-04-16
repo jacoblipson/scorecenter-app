@@ -31,8 +31,8 @@ app.post('/submit.json', function (request, response) {
 app.get('/', function (request, response) {
 	db.collection('scores', function (err, scores) {
 		var today = new Date;
-		scores.insert({ game_title: "Snake", username: "Jake", score: 900, dateplayed: today });
-		scores.find(function(err, cursor) {
+		scores.insert({ game_title: "Tennis", username: "Jake", score: 12, dateplayed: today });
+		scores.find().sort({game_title:1}, function(err, cursor) {
 			console.log(err);
 			var content = '';
 			cursor.each(function (err, item) {
@@ -53,6 +53,8 @@ app.get('/', function (request, response) {
 
 app.get('/highscores.json', function(request, response) {
 	var game = request.query;
+	console.log('game: ');
+	console.log(game);
 	var content = '';
 	db.collection('scores', function (err, scores) {
 		scores.find(game).sort( {score: -1} ).limit( 10, function (err, cursor) {
@@ -74,13 +76,13 @@ app.get('/highscores.json', function(request, response) {
 
 app.get('/usersearch', function(request, response) {
 	response.set('Content-Type', 'text/html');
-	response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><p>Find scores for a specific user: </p><form name="input" action="showuserscores" method="post">Username: <input type="text" name="title"><input type="submit" value="Submit"></form><a href="/">Back to all scores</a></body></html>');
+	response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><p>Find scores for a specific user: </p><form name="input" action="showuserscores" method="post">Username: <input type="text" name="username"><input type="submit" value="Submit"></form><a href="/">Back to all scores</a></body></html>');
 });
 
 app.post('/showuserscores', function(request, response) {
-	var username = request.query;
+	var user = request.body.username;
 	db.collection('scores', function(error, scores) {
-		scores.find(username, function (error, cursor) {
+		scores.find({username: user}).sort({game_title:1}, function (error, cursor) {
 			console.log(error);
 			var content = '';
 			cursor.each(function (err, item) {
@@ -91,7 +93,7 @@ app.post('/showuserscores', function(request, response) {
 				else {
 					db.close();
 					response.set('Content-Type', 'text/html');
-					response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><h2>Displaying scores for:' + username + '</h2><p><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Date Played</td></tr>' + content + '</table></p><a href="/">Back to user search</a></body></html>');
+					response.send('<html><head><title>User Score Search</title></head><body><h1>User Score Search</h1><h2>Displaying scores for:' + user + '</h2><p><table border=1px width=500px><tr><td>Game</td><td>Username</td><td>Score</td><td>Date Played</td></tr>' + content + '</table></p><a href="/usersearch">Back to user search</a></body></html>');
 				}
 			});
 		});
