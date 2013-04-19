@@ -21,14 +21,17 @@ var db = mongo.Db.connect(mongoUri, function (error, databaseConnection) {
 });
 
 app.post('/submit.json', function (request, response) {
-	if (request.game_title && request.username && request.score) {
+	app.set('Content-Type', 'text/json');
+	request.header("Access-Control-Allow-Origin","*");
+	request.header("Access-Control-Allow-Headers", "X-Requested-With");
+	if (request.body.game_title && request.body.username && request.body.score) {
 		var now = new Date;
-		input = {"game_title":request.game_title, "username":request.username, "score":request.score, "created_at": now};
+		input = {"game_title":request.body.game_title, "username":request.body.username, "score":request.body.score, "created_at": now};
 		console.log(input);
 		db.collection('scores', function (err, scores) {
 			console.log(err);
 			scores.insert(input);
-			console.log(inserting);
+			console.log('inserting');
 		});
 	}
 });
